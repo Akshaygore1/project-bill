@@ -17,6 +17,14 @@ export interface Party {
   updatedAt: Date;
 }
 
+export interface Service {
+  id: string;
+  name: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // User management types
 export type UserData = NonNullable<
   ReturnType<typeof authClient.admin.listUsers>["data"]
@@ -32,6 +40,10 @@ export interface PartyFormProps {
   customerId: string;
 }
 
+export interface ServiceFormProps {
+  onSubmit: (data: { name: string; price: number }) => Promise<void>;
+}
+
 export interface CustomerListProps {
   customers: Customer[];
   onSelectCustomer?: (customer: Customer) => void;
@@ -39,6 +51,10 @@ export interface CustomerListProps {
 
 export interface PartyListProps {
   parties: Party[];
+}
+
+export interface ServiceListProps {
+  services: Service[];
 }
 
 export interface CreateUserModalProps {

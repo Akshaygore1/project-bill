@@ -1,4 +1,10 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  decimal,
+} from "drizzle-orm/pg-core";
 
 export const customers = pgTable("customers", {
   id: text("id").primaryKey(),
@@ -17,6 +23,17 @@ export const parties = pgTable("parties", {
   customer_id: text("customer_id")
     .notNull()
     .references(() => customers.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const services = pgTable("services", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

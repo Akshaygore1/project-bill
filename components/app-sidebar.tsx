@@ -5,8 +5,8 @@ import {
   GalleryVerticalEnd,
   Settings2,
   Users,
-  PartyPopper,
   Home,
+  Wrench,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -40,6 +40,12 @@ const data = {
       title: "Customers",
       url: "/customers",
       icon: Users,
+      adminOnly: true,
+    },
+    {
+      title: "Services",
+      url: "/services",
+      icon: Wrench,
       adminOnly: true,
     },
     {
