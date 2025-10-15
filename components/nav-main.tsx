@@ -21,6 +21,7 @@ export function NavMain({
     icon?: LucideIcon;
     isActive?: boolean;
     className?: string;
+    adminOnly?: boolean;
     items?: {
       title: string;
       url: string;

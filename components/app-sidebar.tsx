@@ -6,11 +6,13 @@ import {
   Settings2,
   Users,
   PartyPopper,
+  Home,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +40,7 @@ const data = {
       title: "Customers",
       url: "/customers",
       icon: Users,
+      adminOnly: true,
     },
     {
       title: "User",
@@ -45,18 +48,32 @@ const data = {
       icon: Settings2,
       isActive: true,
       className: "text-black font-semibold",
+      adminOnly: true,
+    },
+    {
+      title: "Form",
+      url: "/dashboard",
+      icon: Home,
+      adminOnly: false,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const isAdmin = useIsAdmin();
+
+  // Filter navigation items based on admin status
+  const filteredNavMain = data.navMain.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
