@@ -71,6 +71,24 @@ export interface CreatorOrderGroup {
   orders: OrderWithDetails[];
 }
 
+export interface CreatorCustomerOrderGroup {
+  creatorName: string;
+  creatorId: string;
+  customerName: string;
+  customerId: string;
+  totalAmount: number;
+  orderCount: number;
+  orders: OrderWithDetails[];
+}
+
+export interface CreatorOrderGroup {
+  creatorName: string;
+  creatorId: string;
+  totalAmount: number;
+  orderCount: number;
+  orders: OrderWithDetails[];
+}
+
 // User management types
 export type UserData = NonNullable<
   ReturnType<typeof authClient.admin.listUsers>["data"]

@@ -8,6 +8,7 @@ import {
   Home,
   Wrench,
   ShoppingCart,
+  FileText,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -50,9 +51,9 @@ const data = {
       adminOnly: true,
     },
     {
-      title: "Orders",
-      url: "/orders",
-      icon: ShoppingCart,
+      title: "Invoices",
+      url: "/invoices",
+      icon: FileText,
       adminOnly: true,
     },
     {

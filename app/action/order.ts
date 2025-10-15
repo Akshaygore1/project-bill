@@ -85,6 +85,16 @@ export interface CreatorOrderGroup {
   orders: OrderWithDetails[];
 }
 
+export interface CreatorCustomerOrderGroup {
+  creatorName: string;
+  creatorId: string;
+  customerName: string;
+  customerId: string;
+  totalAmount: number;
+  orderCount: number;
+  orders: OrderWithDetails[];
+}
+
 export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
   try {
     const result = await db
@@ -124,36 +134,43 @@ export async function getGroupedOrdersByCustomer(): Promise<
   CustomerOrderGroup[]
 > {
   try {
-    // Get all orders with details
+    // Use Drizzle query with GROUP BY for customer grouping
+    const groupedResult = await db
+      .select({
+        customerId: orders.customer_id,
+        customerName: customers.name,
+        totalAmount: sql<number>`SUM(${services.price} * ${orders.quantity})`,
+        orderCount: sql<number>`COUNT(${orders.id})`,
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .groupBy(orders.customer_id, customers.name)
+      .orderBy(customers.name);
+
+    // Get all orders with details for populating the groups
     const ordersWithDetails = await getOrdersWithDetails();
 
-    // Group orders by customer
-    const groupedOrders = ordersWithDetails.reduce((acc, order) => {
-      const customerName = order.customer?.name || "Unknown Customer";
+    // Create a map for quick lookup of orders by customer
+    const ordersByCustomer = ordersWithDetails.reduce((acc, order) => {
       const customerId = order.customer_id;
-
       if (!acc[customerId]) {
-        acc[customerId] = {
-          customerName,
-          customerId,
-          orders: [],
-          totalAmount: 0,
-          orderCount: 0,
-        };
+        acc[customerId] = [];
       }
-
-      const orderTotal = parseFloat(order.service.price) * order.quantity;
-      acc[customerId].orders.push(order);
-      acc[customerId].totalAmount += orderTotal;
-      acc[customerId].orderCount += 1;
-
+      acc[customerId].push(order);
       return acc;
-    }, {} as Record<string, CustomerOrderGroup>);
+    }, {} as Record<string, OrderWithDetails[]>);
 
-    // Convert to array and sort by customer name
-    return Object.values(groupedOrders).sort((a, b) =>
-      a.customerName.localeCompare(b.customerName)
-    );
+    // Combine the grouped results with individual orders
+    const result: CustomerOrderGroup[] = groupedResult.map((group) => ({
+      customerId: group.customerId || "",
+      customerName: group.customerName || "Unknown Customer",
+      totalAmount: Number(group.totalAmount) || 0,
+      orderCount: group.orderCount || 0,
+      orders: ordersByCustomer[group.customerId || ""] || [],
+    }));
+
+    return result;
   } catch (error) {
     console.error("Error fetching grouped orders:", error);
     throw new Error("Failed to fetch grouped orders");
@@ -197,5 +214,63 @@ export async function getGroupedOrdersByCreator(): Promise<
   } catch (error) {
     console.error("Error fetching grouped orders by creator:", error);
     throw new Error("Failed to fetch grouped orders by creator");
+  }
+}
+
+export async function getGroupedOrdersByCreatorAndCustomer(): Promise<
+  CreatorCustomerOrderGroup[]
+> {
+  try {
+    // Use Drizzle query with GROUP BY for creator and customer combination
+    const groupedResult = await db
+      .select({
+        creatorId: orders.created_by,
+        creatorName: user.name,
+        customerId: orders.customer_id,
+        customerName: customers.name,
+        totalAmount: sql<number>`SUM(${services.price} * ${orders.quantity})`,
+        orderCount: sql<number>`COUNT(${orders.id})`,
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(user, eq(orders.created_by, user.id))
+      .groupBy(orders.created_by, orders.customer_id, user.name, customers.name)
+      .orderBy(user.name, customers.name);
+
+    // Get all orders with details for populating the groups
+    const ordersWithDetails = await getOrdersWithDetails();
+
+    // Create a map for quick lookup of orders by creator-customer combination
+    const ordersByGroup = ordersWithDetails.reduce((acc, order) => {
+      const groupKey = `${order.created_by}-${order.customer_id}`;
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
+      }
+      acc[groupKey].push(order);
+      return acc;
+    }, {} as Record<string, OrderWithDetails[]>);
+
+    // Combine the grouped results with individual orders
+    const result: CreatorCustomerOrderGroup[] = groupedResult.map((group) => {
+      const groupKey = `${group.creatorId}-${group.customerId}`;
+      return {
+        creatorId: group.creatorId || "",
+        creatorName: group.creatorName || "Unknown User",
+        customerId: group.customerId || "",
+        customerName: group.customerName || "Unknown Customer",
+        totalAmount: Number(group.totalAmount) || 0,
+        orderCount: group.orderCount || 0,
+        orders: ordersByGroup[groupKey] || [],
+      };
+    });
+
+    return result;
+  } catch (error) {
+    console.error(
+      "Error fetching grouped orders by creator and customer:",
+      error
+    );
+    throw new Error("Failed to fetch grouped orders by creator and customer");
   }
 }
