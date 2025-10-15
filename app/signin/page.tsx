@@ -40,7 +40,7 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
         setError(result.error.message || "An error occurred during sign in");
       } else {
         // Successful sign in - redirect to home
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
