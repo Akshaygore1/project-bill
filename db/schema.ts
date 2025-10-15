@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   decimal,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const customers = pgTable("customers", {
@@ -105,5 +106,24 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const orders = pgTable("orders", {
+  id: text("id").primaryKey(),
+  customer_id: text("customer_id")
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  service_id: text("service_id")
+    .notNull()
+    .references(() => services.id, { onDelete: "cascade" }),
+  quantity: integer("quantity").notNull(),
+  created_by: text("created_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
     .notNull(),
 });

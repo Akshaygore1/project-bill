@@ -25,6 +25,36 @@ export interface Service {
   updatedAt: Date;
 }
 
+export interface Order {
+  id: string;
+  customer_id: string;
+  service_id: string;
+  quantity: number;
+  created_by: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface OrderWithDetails {
+  id: string;
+  customer_id: string;
+  service_id: string;
+  quantity: number;
+  created_by: string;
+  createdAt: Date;
+  updatedAt: Date;
+  customer: {
+    name: string;
+  };
+  service: {
+    name: string;
+    price: string;
+  };
+  createdByUser: {
+    name: string;
+  };
+}
+
 // User management types
 export type UserData = NonNullable<
   ReturnType<typeof authClient.admin.listUsers>["data"]
@@ -76,4 +106,13 @@ export interface CreateUserModalProps {
 export interface UserListProps {
   users: UserData[];
   onDeleteUser?: (userId: string, userName: string) => void;
+}
+
+export interface OrderFormProps {
+  customers: Customer[];
+  services: Service[];
+  onSubmit: (data: {
+    customer_id: string;
+    orderItems: { service_id: string; quantity: number }[];
+  }) => Promise<void>;
 }

@@ -7,6 +7,7 @@ import {
   Users,
   Home,
   Wrench,
+  ShoppingCart,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -46,6 +47,12 @@ const data = {
       title: "Services",
       url: "/services",
       icon: Wrench,
+      adminOnly: true,
+    },
+    {
+      title: "Orders",
+      url: "/orders",
+      icon: ShoppingCart,
       adminOnly: true,
     },
     {
