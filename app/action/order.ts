@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc, gte } from "drizzle-orm";
 import db from "@/db";
 import { orders, customers, services, user } from "@/db/schema";
 
@@ -272,5 +272,118 @@ export async function getGroupedOrdersByCreatorAndCustomer(): Promise<
       error
     );
     throw new Error("Failed to fetch grouped orders by creator and customer");
+  }
+}
+
+export interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  averageOrderValue: number;
+}
+
+export interface ChartDataPoint {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  try {
+    // Get total revenue, orders count, and customers count in one query
+    const statsResult = await db
+      .select({
+        totalRevenue: sql<number>`COALESCE(SUM(${services.price} * ${orders.quantity}), 0)`,
+        totalOrders: sql<number>`COUNT(DISTINCT ${orders.id})`,
+        totalCustomers: sql<number>`COUNT(DISTINCT ${orders.customer_id})`,
+      })
+      .from(orders)
+      .leftJoin(services, eq(orders.service_id, services.id));
+
+    const totalRevenue = Number(statsResult[0]?.totalRevenue) || 0;
+    const totalOrders = statsResult[0]?.totalOrders || 0;
+    const totalCustomers = statsResult[0]?.totalCustomers || 0;
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    return {
+      totalRevenue,
+      totalOrders,
+      totalCustomers,
+      averageOrderValue,
+    };
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    throw new Error("Failed to fetch dashboard stats");
+  }
+}
+
+export async function getDashboardChartData(
+  days: number = 30
+): Promise<ChartDataPoint[]> {
+  try {
+    // Calculate the date threshold
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - days);
+
+    // Get daily aggregated data using DATE() function for date grouping
+    const dailyData = await db
+      .select({
+        date: sql<string>`DATE(${orders.createdAt})`,
+        revenue: sql<number>`COALESCE(SUM(${services.price} * ${orders.quantity}), 0)`,
+        orders: sql<number>`COUNT(${orders.id})`,
+      })
+      .from(orders)
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .where(gte(orders.createdAt, dateThreshold))
+      .groupBy(sql`DATE(${orders.createdAt})`)
+      .orderBy(sql`DATE(${orders.createdAt})`);
+
+    // Format the results
+    return dailyData.map((row) => ({
+      date: row.date,
+      revenue: Math.round(Number(row.revenue) * 100) / 100, // Round to 2 decimal places
+      orders: row.orders,
+    }));
+  } catch (error) {
+    console.error("Error fetching dashboard chart data:", error);
+    throw new Error("Failed to fetch dashboard chart data");
+  }
+}
+
+export async function getRecentOrders(
+  limit: number = 10
+): Promise<OrderWithDetails[]> {
+  try {
+    const result = await db
+      .select({
+        id: orders.id,
+        customer_id: orders.customer_id,
+        service_id: orders.service_id,
+        quantity: orders.quantity,
+        created_by: orders.created_by,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+        customer: {
+          name: customers.name,
+        },
+        service: {
+          name: services.name,
+          price: services.price,
+        },
+        createdByUser: {
+          name: user.name,
+        },
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(user, eq(orders.created_by, user.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(limit);
+
+    return result as OrderWithDetails[];
+  } catch (error) {
+    console.error("Error fetching recent orders:", error);
+    throw new Error("Failed to fetch recent orders");
   }
 }

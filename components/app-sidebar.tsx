@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   FileText,
   File,
+  BarChart3,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -39,6 +40,12 @@ const data = {
     },
   ],
   navMain: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: BarChart3,
+      adminOnly: true,
+    },
     {
       title: "Customers",
       url: "/customers",
