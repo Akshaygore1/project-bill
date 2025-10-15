@@ -9,6 +9,7 @@ import {
   Wrench,
   ShoppingCart,
   FileText,
+  File,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -65,9 +66,9 @@ const data = {
       adminOnly: true,
     },
     {
-      title: "Form",
-      url: "/dashboard",
-      icon: Home,
+      title: "Orders",
+      url: "/orders",
+      icon: File,
       adminOnly: false,
     },
   ],

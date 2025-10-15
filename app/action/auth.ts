@@ -21,7 +21,7 @@ export async function signUpAction(formData: FormData) {
       },
     });
 
-    redirect("/dashboard");
+    redirect("/orders");
   } catch (error: any) {
     const errorMessage = error.message || "An error occurred during sign up";
     redirect(`/signup?error=${encodeURIComponent(errorMessage)}`);
