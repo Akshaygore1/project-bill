@@ -65,39 +65,54 @@ export default function CustomerManagement() {
   }
 
   return (
-    <div className="w-full max-w-4xl space-y-8">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Customer Management</h2>
-        <Button onClick={() => setShowCustomerForm(!showCustomerForm)}>
-          {showCustomerForm ? "Cancel" : "Add Customer"}
-        </Button>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold">Customers</h2>
+          <p className="text-sm text-gray-600">{customers.length} customers</p>
+        </div>
+        <Button onClick={() => setShowCustomerForm(true)}>Add Customer</Button>
       </div>
 
-      {showCustomerForm && (
-        <div className="p-4 border rounded-lg bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Create New Customer</h3>
-          <CustomerForm onSubmit={handleCreateCustomer} />
+      <CustomerList
+        customers={customers}
+        onSelectCustomer={setSelectedCustomer}
+      />
+
+      {selectedCustomer && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold">
+                Parties for {selectedCustomer.name}
+              </h3>
+              <p className="text-sm text-gray-600">{parties.length} parties</p>
+            </div>
+            <Button onClick={() => {}}>Add Party</Button>
+          </div>
+          <PartyList parties={parties} />
         </div>
       )}
 
-      <div>
-        <CustomerList
-          customers={customers}
-          onSelectCustomer={setSelectedCustomer}
-        />
-      </div>
-
-      {selectedCustomer && (
-        <div className="p-4 border rounded-lg">
-          <h3 className="text-xl font-bold mb-4">
-            Parties for {selectedCustomer.name}
-          </h3>
-          <div className="space-y-4">
-            <PartyForm
-              onSubmit={handleCreateParty}
-              customerId={selectedCustomer.id}
+      {/* Customer Modal */}
+      {showCustomerForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Create New Customer</h3>
+            <CustomerForm
+              onSubmit={async (data) => {
+                await handleCreateCustomer(data);
+                setShowCustomerForm(false);
+              }}
             />
-            <PartyList parties={parties} />
+            <div className="flex justify-end mt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowCustomerForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       )}

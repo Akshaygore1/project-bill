@@ -1,26 +1,35 @@
 "use client";
 
-import { Table } from "./ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 import { Party, PartyListProps } from "@/lib/types";
 
 export function PartyList({ parties }: PartyListProps) {
   return (
     <div className="rounded-md border">
       <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Created At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {parties.map((party) => (
-            <tr key={party.id}>
-              <td>{party.name}</td>
-              <td>{new Date(party.createdAt).toLocaleDateString()}</td>
-            </tr>
+            <TableRow key={party.id}>
+              <TableCell className="font-medium">{party.name}</TableCell>
+              <TableCell className="text-sm text-gray-600">
+                {new Date(party.createdAt).toLocaleDateString()}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
+        </TableBody>
       </Table>
     </div>
   );

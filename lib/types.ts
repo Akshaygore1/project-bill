@@ -56,3 +56,8 @@ export interface CreateUserModalProps {
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
 }
+
+export interface UserListProps {
+  users: UserData[];
+  onDeleteUser?: (userId: string, userName: string) => void;
+}

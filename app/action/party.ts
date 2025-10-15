@@ -34,3 +34,12 @@ export async function getPartiesByCustomerId(customerId: string) {
     throw new Error("Failed to fetch parties");
   }
 }
+
+export async function getAllParties() {
+  try {
+    return await db.select().from(parties).orderBy(parties.createdAt);
+  } catch (error) {
+    console.error("Error fetching parties:", error);
+    throw new Error("Failed to fetch parties");
+  }
+}

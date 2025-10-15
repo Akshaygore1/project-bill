@@ -1,6 +1,14 @@
 "use client";
 
-import { Table } from "./ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
+import { Button } from "./ui/button";
 import { Customer, CustomerListProps } from "@/lib/types";
 
 export function CustomerList({
@@ -10,33 +18,36 @@ export function CustomerList({
   return (
     <div className="rounded-md border">
       <Table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone Number</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Phone Number</TableHead>
+            <TableHead>Created At</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {customers.map((customer) => (
-            <tr key={customer.id}>
-              <td>{customer.name}</td>
-              <td>{customer.phone_number}</td>
-              <td>{new Date(customer.createdAt).toLocaleDateString()}</td>
-              <td>
+            <TableRow key={customer.id}>
+              <TableCell className="font-medium">{customer.name}</TableCell>
+              <TableCell>{customer.phone_number}</TableCell>
+              <TableCell className="text-sm text-gray-600">
+                {new Date(customer.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
                 {onSelectCustomer && (
-                  <button
+                  <Button
                     onClick={() => onSelectCustomer(customer)}
-                    className="text-blue-600 hover:text-blue-800"
+                    variant="outline"
+                    size="sm"
                   >
                     View Parties
-                  </button>
+                  </Button>
                 )}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
+        </TableBody>
       </Table>
     </div>
   );

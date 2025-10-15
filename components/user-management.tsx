@@ -149,31 +149,17 @@ export default function UserManagement() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 space-y-8">
+    <div className="w-full mx-auto p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">User Management</h1>
+          <h1 className="text-3xl font-bold">Users</h1>
           <p className="text-sm text-gray-600">{users.length} users</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={fetchUsers}
-            variant="outline"
-            size="sm"
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RotateCw className="w-4 h-4" />
-            )}
-          </Button>
-          <Button onClick={() => setIsModalOpen(true)} size="sm">
-            <UserPlus className="w-4 h-4" />
-            Add User
-          </Button>
-        </div>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <UserPlus className="w-4 h-4" />
+          Add User
+        </Button>
       </div>
 
       {/* Create User Modal */}
@@ -186,25 +172,14 @@ export default function UserManagement() {
         isLoading={addingUser}
       />
 
-      {/* Users */}
-      {loading ? (
-        <div className="text-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-          <p className="text-sm text-gray-600 mt-2">Loading...</p>
-        </div>
-      ) : users.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No users found</p>
-          <Button onClick={() => setIsModalOpen(true)} className="mt-2">
-            Add User
-          </Button>
-        </div>
-      ) : (
+      {/* Users Table */}
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Contact Number</TableHead>
               <TableHead>Address</TableHead>
@@ -216,6 +191,9 @@ export default function UserManagement() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell className="capitalize">
+                  {user.role || "user"}
+                </TableCell>
                 <TableCell className="text-sm text-gray-600">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </TableCell>
@@ -246,7 +224,7 @@ export default function UserManagement() {
             ))}
           </TableBody>
         </Table>
-      )}
+      </div>
     </div>
   );
 }
