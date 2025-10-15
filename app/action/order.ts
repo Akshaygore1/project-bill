@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import db from "@/db";
 import { orders, customers, services, user } from "@/db/schema";
 
@@ -69,6 +69,22 @@ export interface OrderWithDetails {
   };
 }
 
+export interface CustomerOrderGroup {
+  customerName: string;
+  customerId: string;
+  totalAmount: number;
+  orderCount: number;
+  orders: OrderWithDetails[];
+}
+
+export interface CreatorOrderGroup {
+  creatorName: string;
+  creatorId: string;
+  totalAmount: number;
+  orderCount: number;
+  orders: OrderWithDetails[];
+}
+
 export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
   try {
     const result = await db
@@ -101,5 +117,85 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
   } catch (error) {
     console.error("Error fetching orders with details:", error);
     throw new Error("Failed to fetch orders with details");
+  }
+}
+
+export async function getGroupedOrdersByCustomer(): Promise<
+  CustomerOrderGroup[]
+> {
+  try {
+    // Get all orders with details
+    const ordersWithDetails = await getOrdersWithDetails();
+
+    // Group orders by customer
+    const groupedOrders = ordersWithDetails.reduce((acc, order) => {
+      const customerName = order.customer?.name || "Unknown Customer";
+      const customerId = order.customer_id;
+
+      if (!acc[customerId]) {
+        acc[customerId] = {
+          customerName,
+          customerId,
+          orders: [],
+          totalAmount: 0,
+          orderCount: 0,
+        };
+      }
+
+      const orderTotal = parseFloat(order.service.price) * order.quantity;
+      acc[customerId].orders.push(order);
+      acc[customerId].totalAmount += orderTotal;
+      acc[customerId].orderCount += 1;
+
+      return acc;
+    }, {} as Record<string, CustomerOrderGroup>);
+
+    // Convert to array and sort by customer name
+    return Object.values(groupedOrders).sort((a, b) =>
+      a.customerName.localeCompare(b.customerName)
+    );
+  } catch (error) {
+    console.error("Error fetching grouped orders:", error);
+    throw new Error("Failed to fetch grouped orders");
+  }
+}
+
+export async function getGroupedOrdersByCreator(): Promise<
+  CreatorOrderGroup[]
+> {
+  try {
+    // Get all orders with details
+    const ordersWithDetails = await getOrdersWithDetails();
+
+    // Group orders by creator
+    const groupedOrders = ordersWithDetails.reduce((acc, order) => {
+      const creatorName = order.createdByUser?.name || "Unknown User";
+      const creatorId = order.created_by;
+
+      if (!acc[creatorId]) {
+        acc[creatorId] = {
+          creatorName,
+          creatorId,
+          orders: [],
+          totalAmount: 0,
+          orderCount: 0,
+        };
+      }
+
+      const orderTotal = parseFloat(order.service.price) * order.quantity;
+      acc[creatorId].orders.push(order);
+      acc[creatorId].totalAmount += orderTotal;
+      acc[creatorId].orderCount += 1;
+
+      return acc;
+    }, {} as Record<string, CreatorOrderGroup>);
+
+    // Convert to array and sort by creator name
+    return Object.values(groupedOrders).sort((a, b) =>
+      a.creatorName.localeCompare(b.creatorName)
+    );
+  } catch (error) {
+    console.error("Error fetching grouped orders by creator:", error);
+    throw new Error("Failed to fetch grouped orders by creator");
   }
 }
