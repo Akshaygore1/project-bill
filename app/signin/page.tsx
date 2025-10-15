@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 interface SignInPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -22,29 +23,29 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
       setError(decodeURIComponent(errorParam));
     }
   });
-
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setLoading(true);
     setError(null);
 
+    const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
     try {
-      const result = await signIn.email({
+      const { error } = await signIn.email({
         email,
         password,
+        callbackURL: "/dashboard",
       });
 
-      if (result.error) {
-        setError(result.error.message || "An error occurred during sign in");
-      } else {
-        // Successful sign in - redirect to home
-        router.push("/orders");
+      if (error) {
+        setError(error.message || "An error occurred during sign in");
+        setLoading(false);
       }
+      // Note: if successful, navigation happens automatically, so we don't set loading to false
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");
-    } finally {
       setLoading(false);
     }
   };
@@ -55,7 +56,7 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
       {error && (
         <div className="text-red-500 text-sm text-center max-w-64">{error}</div>
       )}
-      <form action={handleSubmit} className="flex flex-col gap-3 w-64">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3 w-64">
         <Input type="email" name="email" placeholder="Email" required />
         <Input
           type="password"
@@ -63,8 +64,15 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
           placeholder="Password"
           required
         />
-        <Button type="submit" disabled={loading}>
-          {loading ? "Signing In..." : "Sign In"}
+        <Button type="submit" disabled={loading} className="mt-2">
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Signing In...
+            </>
+          ) : (
+            "Sign In"
+          )}
         </Button>
       </form>
     </div>
