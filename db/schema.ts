@@ -1,5 +1,29 @@
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 
+export const customers = pgTable("customers", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  phone_number: text("phone_number").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const parties = pgTable("parties", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  customer_id: text("customer_id")
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 export const user = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

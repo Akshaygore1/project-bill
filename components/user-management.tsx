@@ -14,10 +14,7 @@ import {
 } from "@/components/ui/table";
 import CreateUserModal from "./create-user-modal";
 import { RotateCw, UserPlus, Loader2, Trash2 } from "lucide-react";
-
-type UserData = NonNullable<
-  ReturnType<typeof authClient.admin.listUsers>["data"]
->["users"][0];
+import { UserData } from "@/lib/types";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserData[]>([]);

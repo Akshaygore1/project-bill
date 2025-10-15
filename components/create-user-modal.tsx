@@ -9,22 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface CreateUserModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  formData: {
-    email?: string;
-    password?: string;
-    name?: string;
-    role?: "user" | "admin";
-    contactNumber?: string;
-    address?: string;
-  };
-  onFormChange: (field: string, value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  isLoading: boolean;
-}
+import { CreateUserModalProps } from "@/lib/types";
 
 export default function CreateUserModal({
   isOpen,

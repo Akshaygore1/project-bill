@@ -4,6 +4,7 @@ import { getSession, isAdmin } from "@/lib/auth";
 import { signOutAction } from "../../action/auth";
 import { Button } from "@/components/ui/button";
 import UserManagement from "@/components/user-management";
+import CustomerManagement from "@/components/customer-management";
 
 export default async function AdminDashboard() {
   const session = await getSession();
@@ -25,9 +26,12 @@ export default async function AdminDashboard() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen gap-4 p-4">
+    <div className="flex flex-col items-center min-h-screen gap-8 p-4">
       <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-      <UserManagement />
+      <div className="w-full max-w-7xl space-y-12">
+        <UserManagement />
+        <CustomerManagement />
+      </div>
     </div>
   );
 }
