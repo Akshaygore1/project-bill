@@ -11,6 +11,8 @@ export const customers = pgTable("customers", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   phone_number: text("phone_number").notNull(),
+  address: text("address"),
+  payment_due_date: integer("payment_due_date"), // Day of month (1-31)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -35,6 +37,22 @@ export const services = pgTable("services", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const customerServicePrices = pgTable("customer_service_prices", {
+  id: text("id").primaryKey(),
+  customer_id: text("customer_id")
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  service_id: text("service_id")
+    .notNull()
+    .references(() => services.id, { onDelete: "cascade" }),
+  custom_price: decimal("custom_price", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

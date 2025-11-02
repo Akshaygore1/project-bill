@@ -5,6 +5,8 @@ export interface Customer {
   id: string;
   name: string;
   phone_number: string;
+  address?: string | null;
+  payment_due_date?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +23,15 @@ export interface Service {
   id: string;
   name: string;
   price: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CustomerServicePrice {
+  id: string;
+  customer_id: string;
+  service_id: string;
+  custom_price: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,7 +107,13 @@ export type UserData = NonNullable<
 
 // Component prop interfaces
 export interface CustomerFormProps {
-  onSubmit: (data: { name: string; phone_number: string }) => Promise<void>;
+  onSubmit: (data: { 
+    name: string; 
+    phone_number: string;
+    address?: string;
+    payment_due_date?: number;
+    servicePrices?: { service_id: string; custom_price: number }[];
+  }) => Promise<void>;
 }
 
 export interface PartyFormProps {
@@ -110,7 +127,7 @@ export interface ServiceFormProps {
 
 export interface CustomerListProps {
   customers: Customer[];
-  onSelectCustomer?: (customer: Customer) => void;
+  onSelectCustomer: (customer: Customer) => void;
 }
 
 export interface PartyListProps {

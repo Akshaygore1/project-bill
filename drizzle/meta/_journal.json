@@ -22,6 +22,13 @@
       "when": 1760513341062,
       "tag": "0002_sturdy_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1762110529836,
+      "tag": "0003_tan_mac_gargan",
+      "breakpoints": true
     }
   ]
 }

@@ -3,12 +3,13 @@
 import { CustomerList } from "@/components/customer-list";
 import { PartyList } from "@/components/party-list";
 import { Button } from "@/components/ui/button";
-import { createCustomer, getCustomers } from "@/app/action/customer";
+import { createCustomer, getCustomers, getCustomerServicePrices } from "@/app/action/customer";
 import { createParty, getPartiesByCustomerId } from "@/app/action/party";
+import { getServices } from "@/app/action/service";
 import { useState, useEffect } from "react";
 import CustomerModal from "@/components/customer-modal";
 import PartyModal from "@/components/party-modal";
-import { Customer, Party } from "@/lib/types";
+import { Customer, Party, Service } from "@/lib/types";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -16,6 +17,8 @@ export default function CustomersPage() {
     null
   );
   const [parties, setParties] = useState<Party[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [customerServicePrices, setCustomerServicePrices] = useState<{ service_id: string; custom_price: number }[]>([]);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
@@ -23,6 +26,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
+    loadServices();
   }, []);
 
   useEffect(() => {
@@ -49,20 +53,48 @@ export default function CustomersPage() {
     }
   }
 
+  async function loadServices() {
+    try {
+      const data = await getServices();
+      setServices(data);
+    } catch (error) {
+      console.error("Error loading services:", error);
+    }
+  }
+
+  async function loadCustomerServicePrices(customerId: string) {
+    try {
+      const data = await getCustomerServicePrices(customerId);
+      setCustomerServicePrices(data.map(d => ({ service_id: d.service_id, custom_price: d.custom_price })));
+    } catch (error) {
+      console.error("Error loading customer service prices:", error);
+      setCustomerServicePrices([]);
+    }
+  }
+
   async function handleCreateCustomer(data: {
     name: string;
     phone_number: string;
+    address?: string;
+    payment_due_date?: number;
+    servicePrices?: { service_id: string; custom_price: number }[];
   }) {
     setIsCreatingCustomer(true);
     try {
       await createCustomer(data);
       await loadCustomers();
       setIsCustomerModalOpen(false);
+      setCustomerServicePrices([]);
     } catch (error) {
       console.error("Error creating customer:", error);
     } finally {
       setIsCreatingCustomer(false);
     }
+  }
+
+  function handleOpenCustomerModal() {
+    setCustomerServicePrices([]);
+    setIsCustomerModalOpen(true);
   }
 
   async function handleCreateParty(data: {
@@ -92,7 +124,7 @@ export default function CustomersPage() {
               {customers.length} customers
             </p>
           </div>
-          <Button onClick={() => setIsCustomerModalOpen(true)}>
+          <Button onClick={handleOpenCustomerModal}>
             Add Customer
           </Button>
         </div>
@@ -103,7 +135,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Parties Section - shown when customer is selected */}
-      {selectedCustomer && (
+      {/* {selectedCustomer && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -116,18 +148,20 @@ export default function CustomersPage() {
           </div>
           <PartyList parties={parties} />
         </div>
-      )}
+      )} */}
 
       {/* Customer Modal */}
-      <CustomerModal
+      {/* <CustomerModal
         isOpen={isCustomerModalOpen}
         onOpenChange={setIsCustomerModalOpen}
+        services={services}
+        existingServicePrices={customerServicePrices}
         onSubmit={handleCreateCustomer}
         isLoading={isCreatingCustomer}
-      />
+      /> */}
 
       {/* Party Modal */}
-      {selectedCustomer && (
+      {/* {selectedCustomer && (
         <PartyModal
           isOpen={isPartyModalOpen}
           onOpenChange={setIsPartyModalOpen}
@@ -135,7 +169,7 @@ export default function CustomersPage() {
           onSubmit={handleCreateParty}
           isLoading={isCreatingParty}
         />
-      )}
+      )} */}
     </div>
   );
 }
