@@ -387,3 +387,41 @@ export async function getRecentOrders(
     throw new Error("Failed to fetch recent orders");
   }
 }
+
+export async function getCustomerOrders(
+  customerId: string
+): Promise<OrderWithDetails[]> {
+  try {
+    const result = await db
+      .select({
+        id: orders.id,
+        customer_id: orders.customer_id,
+        service_id: orders.service_id,
+        quantity: orders.quantity,
+        created_by: orders.created_by,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+        customer: {
+          name: customers.name,
+        },
+        service: {
+          name: services.name,
+          price: services.price,
+        },
+        createdByUser: {
+          name: user.name,
+        },
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(user, eq(orders.created_by, user.id))
+      .where(eq(orders.customer_id, customerId))
+      .orderBy(desc(orders.createdAt));
+
+    return result as OrderWithDetails[];
+  } catch (error) {
+    console.error("Error fetching customer orders:", error);
+    throw new Error("Failed to fetch customer orders");
+  }
+}

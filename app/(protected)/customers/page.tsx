@@ -1,39 +1,42 @@
 "use client";
 
 import { CustomerList } from "@/components/customer-list";
-import { PartyList } from "@/components/party-list";
-import { Button } from "@/components/ui/button";
-import { createCustomer, getCustomers, getCustomerServicePrices } from "@/app/action/customer";
-import { createParty, getPartiesByCustomerId } from "@/app/action/party";
-import { getServices } from "@/app/action/service";
+import { getCustomers, deleteCustomer } from "@/app/action/customer";
+import {
+  getGroupedOrdersByCustomer,
+  type CustomerOrderGroup,
+} from "@/app/action/order";
 import { useState, useEffect } from "react";
-import CustomerModal from "@/components/customer-modal";
-import PartyModal from "@/components/party-modal";
-import { Customer, Party, Service } from "@/lib/types";
+import type { Customer } from "@/lib/types";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerBilling, setCustomerBilling] = useState<CustomerOrderGroup[]>(
+    []
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
-  const [parties, setParties] = useState<Party[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
-  const [customerServicePrices, setCustomerServicePrices] = useState<{ service_id: string; custom_price: number }[]>([]);
-  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
-  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
-  const [isCreatingParty, setIsCreatingParty] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null
+  );
 
   useEffect(() => {
     loadCustomers();
-    loadServices();
+    loadCustomerBilling();
   }, []);
-
-  useEffect(() => {
-    if (selectedCustomer) {
-      loadParties(selectedCustomer.id);
-    }
-  }, [selectedCustomer]);
 
   async function loadCustomers() {
     try {
@@ -44,132 +47,111 @@ export default function CustomersPage() {
     }
   }
 
-  async function loadParties(customerId: string) {
+  async function loadCustomerBilling() {
     try {
-      const data = await getPartiesByCustomerId(customerId);
-      setParties(data);
+      const data = await getGroupedOrdersByCustomer();
+      setCustomerBilling(data);
     } catch (error) {
-      console.error("Error loading parties:", error);
+      console.error("Error loading customer billing:", error);
     }
   }
 
-  async function loadServices() {
-    try {
-      const data = await getServices();
-      setServices(data);
-    } catch (error) {
-      console.error("Error loading services:", error);
-    }
-  }
+  async function handleDeleteCustomer() {
+    if (!customerToDelete) return;
 
-  async function loadCustomerServicePrices(customerId: string) {
     try {
-      const data = await getCustomerServicePrices(customerId);
-      setCustomerServicePrices(data.map(d => ({ service_id: d.service_id, custom_price: d.custom_price })));
-    } catch (error) {
-      console.error("Error loading customer service prices:", error);
-      setCustomerServicePrices([]);
-    }
-  }
-
-  async function handleCreateCustomer(data: {
-    name: string;
-    phone_number: string;
-    address?: string;
-    payment_due_date?: number;
-    servicePrices?: { service_id: string; custom_price: number }[];
-  }) {
-    setIsCreatingCustomer(true);
-    try {
-      await createCustomer(data);
+      await deleteCustomer(customerToDelete.id);
       await loadCustomers();
-      setIsCustomerModalOpen(false);
-      setCustomerServicePrices([]);
+      await loadCustomerBilling();
+      setDeleteModalOpen(false);
+      setCustomerToDelete(null);
     } catch (error) {
-      console.error("Error creating customer:", error);
-    } finally {
-      setIsCreatingCustomer(false);
+      console.error("Error deleting customer:", error);
     }
   }
 
-  function handleOpenCustomerModal() {
-    setCustomerServicePrices([]);
-    setIsCustomerModalOpen(true);
-  }
-
-  async function handleCreateParty(data: {
-    name: string;
-    customer_id: string;
-  }) {
-    setIsCreatingParty(true);
-    try {
-      await createParty(data);
-      await loadParties(data.customer_id);
-      setIsPartyModalOpen(false);
-    } catch (error) {
-      console.error("Error creating party:", error);
-    } finally {
-      setIsCreatingParty(false);
-    }
+  function openDeleteModal(customer: Customer) {
+    setCustomerToDelete(customer);
+    setDeleteModalOpen(true);
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      {/* Customers Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Customers</h1>
-            <p className="text-sm text-gray-600">
-              {customers.length} customers
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
+                Manage Clients
+              </h1>
+              <p className="text-slate-600 mt-2">
+                View and manage all your customer accounts and billing
+              </p>
+            </div>
+            <Link
+              href="/customers/create"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm w-full sm:w-auto"
+            >
+              <Plus size={20} /> Add Client
+            </Link>
           </div>
-          <Button onClick={handleOpenCustomerModal}>
-            Add Customer
-          </Button>
         </div>
-        <CustomerList
-          customers={customers}
-          onSelectCustomer={(customer) => setSelectedCustomer(customer)}
-        />
+
+        <div className="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-xl">
+          <div className="p-8">
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-slate-900 text-balance">
+                Client List
+              </h2>
+              <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mt-3"></div>
+            </div>
+            <CustomerList
+              customers={customers}
+              customerBilling={customerBilling}
+              onSelectCustomer={(customer) => setSelectedCustomer(customer)}
+              onDeleteCustomer={openDeleteModal}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Parties Section - shown when customer is selected */}
-      {/* {selectedCustomer && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">
-                Parties for {selectedCustomer.name}
-              </h2>
-              <p className="text-sm text-gray-600">{parties.length} parties</p>
-            </div>
-            <Button onClick={() => setIsPartyModalOpen(true)}>Add Party</Button>
-          </div>
-          <PartyList parties={parties} />
-        </div>
-      )} */}
-
-      {/* Customer Modal */}
-      {/* <CustomerModal
-        isOpen={isCustomerModalOpen}
-        onOpenChange={setIsCustomerModalOpen}
-        services={services}
-        existingServicePrices={customerServicePrices}
-        onSubmit={handleCreateCustomer}
-        isLoading={isCreatingCustomer}
-      /> */}
-
-      {/* Party Modal */}
-      {/* {selectedCustomer && (
-        <PartyModal
-          isOpen={isPartyModalOpen}
-          onOpenChange={setIsPartyModalOpen}
-          customer={selectedCustomer}
-          onSubmit={handleCreateParty}
-          isLoading={isCreatingParty}
-        />
-      )} */}
+      {/* Delete Customer Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent className="sm:max-w-md bg-white border-slate-200">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              Delete Customer
+            </DialogTitle>
+            <DialogDescription className="text-slate-600 mt-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-900">
+                "{customerToDelete?.name}"
+              </span>
+              ? This action cannot be undone and will remove all associated data
+              including service prices and billing information.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setCustomerToDelete(null);
+              }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteCustomer}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

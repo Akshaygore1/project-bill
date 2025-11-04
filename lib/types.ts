@@ -114,6 +114,17 @@ export interface CustomerFormProps {
     payment_due_date?: number;
     servicePrices?: { service_id: string; custom_price: number }[];
   }) => Promise<void>;
+  formData: {
+    name?: string;
+    phone_number?: string;
+    address?: string;
+    payment_due_date?: number;
+    servicePrices?: { service_id: string; custom_price: number }[];
+  };
+  onFormChange: (field: string, value: string | number | undefined | { service_id: string; custom_price: number }[]) => void;
+  isLoading: boolean;
+  services?: Service[];
+  isEditMode?: boolean;
 }
 
 export interface PartyFormProps {
@@ -128,6 +139,7 @@ export interface ServiceFormProps {
 export interface CustomerListProps {
   customers: Customer[];
   onSelectCustomer: (customer: Customer) => void;
+  onDeleteCustomer?: (customer: Customer) => void;
 }
 
 export interface PartyListProps {
