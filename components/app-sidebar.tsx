@@ -65,14 +65,6 @@ const data = {
       adminOnly: true,
     },
     {
-      title: "User",
-      url: "/admin",
-      icon: Settings2,
-      isActive: true,
-      className: "text-black font-semibold",
-      adminOnly: true,
-    },
-    {
       title: "Orders",
       url: "/orders",
       icon: File,
