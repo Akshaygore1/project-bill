@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { eq, sql, desc, gte } from "drizzle-orm";
 import db from "@/db";
-import { orders, customers, services, user } from "@/db/schema";
+import { orders, customers, services, user, customerServicePrices } from "@/db/schema";
 
 export interface OrderItem {
   service_id: string;
@@ -406,7 +406,7 @@ export async function getCustomerOrders(
         },
         service: {
           name: services.name,
-          price: services.price,
+          price: sql`COALESCE(${customerServicePrices.custom_price}, ${services.price})`.as('price'),
         },
         createdByUser: {
           name: user.name,
@@ -415,10 +415,13 @@ export async function getCustomerOrders(
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .leftJoin(user, eq(orders.created_by, user.id))
       .where(eq(orders.customer_id, customerId))
       .orderBy(desc(orders.createdAt));
-
     return result as OrderWithDetails[];
   } catch (error) {
     console.error("Error fetching customer orders:", error);
