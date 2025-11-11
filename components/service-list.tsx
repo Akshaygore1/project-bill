@@ -1,40 +1,39 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./ui/table";
 import { Service, ServiceListProps } from "@/lib/types";
+import { DataTable, type Column, type Action } from "./data-table";
+import { Trash } from "lucide-react";
 
 export function ServiceList({ services }: ServiceListProps) {
+  const columns: Column<Service>[] = [
+    {
+      key: "name",
+      header: "Name",
+      accessor: (service) => service.name,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "price",
+      header: "Price",
+      render: (service) => `₹${service.price.toFixed(2)}`,
+      cellClassName: "font-medium",
+    },
+    {
+      key: "createdAt",
+      header: "Created At",
+      render: (service) => new Date(service.createdAt).toLocaleDateString(),
+      cellClassName: "text-sm text-gray-600",
+    },
+  ];
+
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead>Created At</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {services.map((service) => (
-            <TableRow key={service.id}>
-              <TableCell className="font-medium">{service.name}</TableCell>
-              <TableCell className="font-medium">
-                ₹{service.price.toFixed(2)}
-              </TableCell>
-              <TableCell className="text-sm text-gray-600">
-                {new Date(service.createdAt).toLocaleDateString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={services}
+      columns={columns}
+      showSerialNumber={true}
+      serialNumberHeader="Sr. No."
+      emptyMessage="No services found"
+    />
   );
 }
