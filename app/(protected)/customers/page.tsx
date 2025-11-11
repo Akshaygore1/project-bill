@@ -97,14 +97,8 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-xl">
+        <div>
           <div className="p-8">
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-slate-900 text-balance">
-                Client List
-              </h2>
-              <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mt-3"></div>
-            </div>
             <CustomerList
               customers={customers}
               customerBilling={customerBilling}
