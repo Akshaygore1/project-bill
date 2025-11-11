@@ -63,6 +63,12 @@ export function CustomerProfileClient({
       ),
     },
     {
+      key: "created_by",
+      header: "Created By",
+      width: "w-[150px]",
+      accessor: (order) => order.createdByUser.name,
+    },
+    {
       key: "quantity",
       header: "Quantity",
       width: "w-[100px]",
