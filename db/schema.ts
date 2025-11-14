@@ -132,6 +132,8 @@ export const orders = pgTable("orders", {
   customer_id: text("customer_id")
     .notNull()
     .references(() => customers.id, { onDelete: "cascade" }),
+  party_id: text("party_id")
+    .references(() => parties.id, { onDelete: "set null" }),
   service_id: text("service_id")
     .notNull()
     .references(() => services.id, { onDelete: "cascade" }),

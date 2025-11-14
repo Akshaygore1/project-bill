@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { OrderFormProps } from "@/lib/types";
-import { Customer, Service } from "@/lib/types";
+import { getPartiesByCustomerId } from "@/app/action/party";
+import type { Customer, Service, Party } from "@/lib/types";
+import type { OrderFormProps } from "@/lib/types";
 import { ChevronDown, X, Plus } from "lucide-react";
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Label } from "./ui/label";
 
 interface OrderItem {
   service_id: string;
@@ -23,12 +25,37 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
+  const [selectedParty, setSelectedParty] = useState<Party | null>(null);
+  const [parties, setParties] = useState<Party[]>([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [serviceSearch, setServiceSearch] = useState("");
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [quantity, setQuantity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch parties when customer is selected
+  useEffect(() => {
+    const fetchParties = async () => {
+      if (selectedCustomer) {
+        try {
+          const customerParties = await getPartiesByCustomerId(
+            selectedCustomer.id
+          );
+          setParties(customerParties);
+          setSelectedParty(null); // Reset party selection when customer changes
+        } catch (error) {
+          console.error("Error fetching parties:", error);
+          setParties([]);
+        }
+      } else {
+        setParties([]);
+        setSelectedParty(null);
+      }
+    };
+
+    fetchParties();
+  }, [selectedCustomer]);
 
   const filteredCustomers = customers.filter((customer) =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
@@ -79,6 +106,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
     try {
       await onSubmit({
         customer_id: selectedCustomer.id,
+        party_id: selectedParty?.id || null,
         orderItems: orderItems.map((item) => ({
           service_id: item.service_id,
           quantity: item.quantity,
@@ -87,6 +115,8 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
 
       // Reset form
       setSelectedCustomer(null);
+      setSelectedParty(null);
+      setParties([]);
       setCustomerSearch("");
       setOrderItems([]);
       setSelectedService(null);
@@ -106,7 +136,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer Selection */}
         <div>
-          <label className="block text-sm font-medium mb-2">Customer</label>
+          <Label className="block text-sm font-medium mb-2">Customer</Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -142,6 +172,48 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
           </DropdownMenu>
         </div>
 
+        {/* Party Selection */}
+        {selectedCustomer && parties.length > 0 && (
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Party (Optional)
+            </Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                  type="button"
+                >
+                  {selectedParty
+                    ? selectedParty.name
+                    : "Select Party (Optional)"}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full min-w-[300px]">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSelectedParty(null);
+                  }}
+                >
+                  No Party (Bill to Customer)
+                </DropdownMenuItem>
+                {parties.map((party) => (
+                  <DropdownMenuItem
+                    key={party.id}
+                    onClick={() => {
+                      setSelectedParty(party);
+                    }}
+                  >
+                    {party.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
         {/* Service and Quantity Addition */}
         <div className="border rounded-lg p-4">
           <h3 className="text-lg font-medium mb-4">Add Services</h3>
@@ -149,7 +221,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Service Selection */}
             <div>
-              <label className="block text-sm font-medium mb-1">Service</label>
+              <Label className="block text-sm font-medium mb-1">Service</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -187,7 +259,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
 
             {/* Quantity Input */}
             <div>
-              <label className="block text-sm font-medium mb-1">Quantity</label>
+              <Label className="block text-sm font-medium mb-1">Quantity</Label>
               <Input
                 type="number"
                 placeholder="Quantity"
@@ -219,7 +291,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
             <div className="space-y-2">
               {orderItems.map((item, index) => (
                 <div
-                  key={index}
+                  key={`${item.service_id}-${index}`}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded"
                 >
                   <div>

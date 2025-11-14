@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "./ui/table";
 import { Button } from "./ui/button";
-import { CreatorOrderGroup, OrderWithDetails } from "@/lib/types";
+import type { CreatorOrderGroup, OrderWithDetails } from "@/lib/types";
 
 export interface OrderListProps {
   groupedOrders: CreatorOrderGroup[];
@@ -39,6 +39,7 @@ export function OrderList({ groupedOrders, onCreateInvoice }: OrderListProps) {
             <TableHead>Quantity</TableHead>
             <TableHead>Total Bill</TableHead>
             <TableHead>Customer Name</TableHead>
+            <TableHead>Party Name</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -48,7 +49,7 @@ export function OrderList({ groupedOrders, onCreateInvoice }: OrderListProps) {
             <React.Fragment key={creatorGroup.creatorId}>
               {/* Creator Header Row */}
               <TableRow className="bg-gray-50 border-b-2 border-gray-200">
-                <TableCell colSpan={4} className="font-semibold text-lg">
+                <TableCell colSpan={5} className="font-semibold text-lg">
                   {creatorGroup.creatorName}
                 </TableCell>
                 <TableCell className="font-bold text-blue-600">
@@ -90,6 +91,9 @@ export function OrderList({ groupedOrders, onCreateInvoice }: OrderListProps) {
                   </TableCell>
                   <TableCell>
                     {order.customer?.name || "Unknown Customer"}
+                  </TableCell>
+                  <TableCell>
+                    {order.party?.name || "-"}
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString()}

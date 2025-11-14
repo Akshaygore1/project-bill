@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { eq, sql, desc, gte } from "drizzle-orm";
 import db from "@/db";
-import { orders, customers, services, user, customerServicePrices } from "@/db/schema";
+import { orders, customers, services, user, customerServicePrices, parties } from "@/db/schema";
 
 export interface OrderItem {
   service_id: string;
@@ -14,6 +14,7 @@ export async function createOrders(
   userId: string,
   data: {
     customer_id: string;
+    party_id?: string | null;
     orderItems: OrderItem[];
   }
 ) {
@@ -24,6 +25,7 @@ export async function createOrders(
         .values({
           id: randomUUID(),
           customer_id: data.customer_id,
+          party_id: data.party_id || null,
           service_id: item.service_id,
           quantity: item.quantity,
           created_by: userId,
@@ -101,6 +103,7 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
       .select({
         id: orders.id,
         customer_id: orders.customer_id,
+        party_id: orders.party_id,
         service_id: orders.service_id,
         quantity: orders.quantity,
         created_by: orders.created_by,
@@ -108,6 +111,9 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
         updatedAt: orders.updatedAt,
         customer: {
           name: customers.name,
+        },
+        party: {
+          name: parties.name,
         },
         service: {
           name: services.name,
@@ -119,6 +125,7 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(parties, eq(orders.party_id, parties.id))
       .leftJoin(services, eq(orders.service_id, services.id))
       .leftJoin(user, eq(orders.created_by, user.id))
       .orderBy(orders.createdAt);
@@ -358,6 +365,7 @@ export async function getRecentOrders(
       .select({
         id: orders.id,
         customer_id: orders.customer_id,
+        party_id: orders.party_id,
         service_id: orders.service_id,
         quantity: orders.quantity,
         created_by: orders.created_by,
@@ -365,6 +373,9 @@ export async function getRecentOrders(
         updatedAt: orders.updatedAt,
         customer: {
           name: customers.name,
+        },
+        party: {
+          name: parties.name,
         },
         service: {
           name: services.name,
@@ -376,6 +387,7 @@ export async function getRecentOrders(
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(parties, eq(orders.party_id, parties.id))
       .leftJoin(services, eq(orders.service_id, services.id))
       .leftJoin(user, eq(orders.created_by, user.id))
       .orderBy(desc(orders.createdAt))
@@ -396,6 +408,7 @@ export async function getCustomerOrders(
       .select({
         id: orders.id,
         customer_id: orders.customer_id,
+        party_id: orders.party_id,
         service_id: orders.service_id,
         quantity: orders.quantity,
         created_by: orders.created_by,
@@ -403,6 +416,9 @@ export async function getCustomerOrders(
         updatedAt: orders.updatedAt,
         customer: {
           name: customers.name,
+        },
+        party: {
+          name: parties.name,
         },
         service: {
           name: services.name,
@@ -414,6 +430,7 @@ export async function getCustomerOrders(
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(parties, eq(orders.party_id, parties.id))
       .leftJoin(services, eq(orders.service_id, services.id))
       .leftJoin(
         customerServicePrices,

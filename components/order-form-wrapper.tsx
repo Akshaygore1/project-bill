@@ -1,7 +1,7 @@
 "use client";
 
 import { OrderForm } from "./order-form";
-import { Customer, Service } from "@/lib/types";
+import type { Customer, Service } from "@/lib/types";
 import { createOrders } from "@/app/action/order";
 import { authClient } from "@/lib/auth-client";
 
@@ -18,6 +18,7 @@ export function OrderFormWrapper({
 
   const handleCreateOrder = async (data: {
     customer_id: string;
+    party_id?: string | null;
     orderItems: { service_id: string; quantity: number }[];
   }) => {
     if (!session?.user) {

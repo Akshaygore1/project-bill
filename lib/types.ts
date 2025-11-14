@@ -1,4 +1,4 @@
-import { authClient } from "@/lib/auth-client";
+import type { authClient } from "@/lib/auth-client";
 
 // Database entity interfaces
 export interface Customer {
@@ -39,6 +39,7 @@ export interface CustomerServicePrice {
 export interface Order {
   id: string;
   customer_id: string;
+  party_id?: string | null;
   service_id: string;
   quantity: number;
   created_by: string;
@@ -49,6 +50,7 @@ export interface Order {
 export interface OrderWithDetails {
   id: string;
   customer_id: string;
+  party_id?: string | null;
   service_id: string;
   quantity: number;
   created_by: string;
@@ -57,6 +59,9 @@ export interface OrderWithDetails {
   customer: {
     name: string;
   };
+  party?: {
+    name: string;
+  } | null;
   service: {
     name: string;
     price: string;
@@ -176,6 +181,7 @@ export interface OrderFormProps {
   services: Service[];
   onSubmit: (data: {
     customer_id: string;
+    party_id?: string | null;
     orderItems: { service_id: string; quantity: number }[];
   }) => Promise<void>;
 }
