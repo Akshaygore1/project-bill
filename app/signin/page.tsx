@@ -36,7 +36,7 @@ export default function SignInPage({ searchParams }: SignInPageProps) {
       const { error } = await signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: "/customers",
       });
 
       if (error) {
