@@ -122,10 +122,10 @@ export default function WorkersPage() {
       // Close modal and refresh users list
       setAddWorkerModalOpen(false);
       fetchUsers();
-      alert("Worker added successfully!");
+      toast("Worker added successfully!");
     } catch (error) {
       console.error("Error adding worker:", error);
-      alert("Error adding worker");
+      toast("Error adding worker");
     } finally {
       setAddingWorker(false);
     }
