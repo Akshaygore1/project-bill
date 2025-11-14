@@ -39,6 +39,7 @@ export async function getSession() {
     });
     return session;
   } catch (error) {
+    console.error("Error getting session:", error);
     return null;
   }
 }

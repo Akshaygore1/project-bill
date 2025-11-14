@@ -22,6 +22,16 @@ export async function createParty(data: { name: string; customer_id: string }) {
   }
 }
 
+export async function deleteParty(partyId: string) {
+  try {
+    await db.delete(parties).where(eq(parties.id, partyId));
+    return true;
+  } catch (error) {
+    console.error("Error deleting party:", error);
+    throw new Error("Failed to delete party");
+  }
+}
+
 export async function getPartiesByCustomerId(customerId: string) {
   try {
     return await db

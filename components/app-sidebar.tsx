@@ -3,14 +3,12 @@
 import * as React from "react";
 import {
   GalleryVerticalEnd,
-  Settings2,
   Users,
-  Home,
   Wrench,
-  ShoppingCart,
   FileText,
   File,
   BarChart3,
+  User,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -69,6 +67,12 @@ const data = {
       url: "/orders",
       icon: File,
       adminOnly: false,
+    },
+    {
+      title: "workers",
+      url: "/workers",
+      icon: User,
+      adminOnly: true,
     },
   ],
 };

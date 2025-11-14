@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +13,14 @@ import {
   MapPin,
   Calendar,
   TrendingUp,
+  Plus,
+  Users,
 } from "lucide-react";
 import type { OrderWithDetails } from "@/app/action/order";
+import type { Party } from "@/lib/types";
 import { DataTable, type Column, type Action } from "@/components/data-table";
+import PartyModal from "@/components/party-modal";
+import { createParty } from "@/app/action/party";
 
 interface Customer {
   id: string;
@@ -29,13 +35,19 @@ interface Customer {
 interface CustomerProfileClientProps {
   customer: Customer;
   orders: OrderWithDetails[];
+  parties: Party[];
 }
 
 export function CustomerProfileClient({
   customer,
   orders,
+  parties,
 }: CustomerProfileClientProps) {
   const router = useRouter();
+  const [isPartyModalOpen, setIsPartyModalOpen] = useState(false);
+  const [isSubmittingParty, setIsSubmittingParty] = useState(false);
+  const [editingParty, setEditingParty] = useState<Party | null>(null);
+  const [partiesList, setPartiesList] = useState<Party[]>(parties);
 
   // Calculate total amount from orders
   const totalAmount = orders.reduce((sum, order) => {
@@ -132,6 +144,90 @@ export function CustomerProfileClient({
       className: "h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50",
     },
   ];
+
+  // Define columns for the parties table
+  const partyColumns: Column<Party>[] = [
+    {
+      key: "name",
+      header: "Party Name",
+      width: "w-[250px]",
+      render: (party) => (
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-slate-500" />
+          <span className="font-medium">{party.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created Date",
+      width: "w-[150px]",
+      render: (party) =>
+        new Date(party.createdAt).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+    {
+      key: "updatedAt",
+      header: "Last Updated",
+      width: "w-[150px]",
+      render: (party) =>
+        new Date(party.updatedAt).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+    },
+  ];
+
+  // Define actions for the parties table
+  const partyActions: Action<Party>[] = [
+    {
+      icon: Edit,
+      onClick: (party) => {
+        setEditingParty(party);
+        setIsPartyModalOpen(true);
+      },
+      variant: "ghost",
+      size: "icon",
+      className:
+        "h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50",
+    },
+    {
+      icon: Trash2,
+      onClick: (party) => {
+        console.log("Delete party:", party.id);
+      },
+      variant: "ghost",
+      size: "icon",
+      className: "h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50",
+    },
+  ];
+
+  // Handle party submission
+  const handlePartySubmit = async (data: {
+    name: string;
+    customer_id: string;
+  }) => {
+    setIsSubmittingParty(true);
+    try {
+      if (editingParty) {
+        // TODO: Implement update party functionality
+        console.log("Update party:", editingParty.id, data);
+      } else {
+        const newParty = await createParty(data);
+        setPartiesList([...partiesList, newParty]);
+      }
+      setIsPartyModalOpen(false);
+      setEditingParty(null);
+    } catch (error) {
+      console.error("Error saving party:", error);
+    } finally {
+      setIsSubmittingParty(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -287,9 +383,9 @@ export function CustomerProfileClient({
             </p>
             <div className="flex flex-wrap gap-2">
               {services ? (
-                services.split(", ").map((service, idx) => (
+                services.split(", ").map((service) => (
                   <Badge
-                    key={idx}
+                    key={service}
                     variant="secondary"
                     className="bg-slate-100 text-slate-700"
                   >
@@ -317,6 +413,45 @@ export function CustomerProfileClient({
           emptyMessage="No service history available for this customer."
         />
       </div>
+
+      {/* Parties Section */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-2xl font-bold text-slate-900">
+            Associated Parties
+          </h2>
+          <Button
+            onClick={() => {
+              setEditingParty(null);
+              setIsPartyModalOpen(true);
+            }}
+            variant="default"
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Party
+          </Button>
+        </div>
+
+        <DataTable
+          data={partiesList}
+          columns={partyColumns}
+          actions={partyActions}
+          showSerialNumber={true}
+          wrapInCard={true}
+          emptyMessage="No parties associated with this customer."
+        />
+      </div>
+
+      {/* Party Modal */}
+      <PartyModal
+        isOpen={isPartyModalOpen}
+        onOpenChange={setIsPartyModalOpen}
+        party={editingParty}
+        customer={customer}
+        onSubmit={handlePartySubmit}
+        isLoading={isSubmittingParty}
+      />
     </div>
   );
 }

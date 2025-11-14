@@ -12,6 +12,7 @@ export default function ServicesPage() {
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [isCreatingService, setIsCreatingService] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     loadServices();
   }, []);

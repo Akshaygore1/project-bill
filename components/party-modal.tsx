@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Party, Customer } from "@/lib/types";
-
+import { Label } from "@/components/ui/label";
 interface PartyModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,7 +36,7 @@ export default function PartyModal({
     } else {
       setName("");
     }
-  }, [party, isOpen]);
+  }, [party]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +54,7 @@ export default function PartyModal({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Party Name</label>
+            <Label className="text-sm font-medium">Party Name</Label>
             <Input
               type="text"
               placeholder="Party Name"
@@ -64,7 +64,7 @@ export default function PartyModal({
             />
           </div>
           <div>
-            <label className="text-sm font-medium">Customer</label>
+            <Label className="text-sm font-medium">Customer</Label>
             <Input
               type="text"
               value={customer.name}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { PartyFormProps } from "@/lib/types";
+import type { PartyFormProps } from "@/lib/types";
 
 export function PartyForm({ onSubmit, customerId }: PartyFormProps) {
   const [name, setName] = useState("");
@@ -25,17 +25,32 @@ export function PartyForm({ onSubmit, customerId }: PartyFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
+        <label htmlFor="party-name" className="text-sm font-medium text-foreground">
+          Party Name <span className="text-destructive">*</span>
+        </label>
         <Input
+          id="party-name"
           type="text"
-          placeholder="Party Name"
+          placeholder="Enter party name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          className="mt-2"
         />
       </div>
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? "Creating..." : "Create Party"}
-      </Button>
+      <div className="flex gap-3 justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setName("")}
+          disabled={isLoading}
+        >
+          Clear
+        </Button>
+        <Button type="submit" disabled={isLoading || !name.trim()}>
+          {isLoading ? "Creating..." : "Add Party"}
+        </Button>
+      </div>
     </form>
   );
 }

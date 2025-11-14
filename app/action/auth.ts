@@ -22,9 +22,9 @@ export async function signUpAction(formData: FormData) {
     });
 
     redirect("/orders");
-  } catch (error: any) {
-    const errorMessage = error.message || "An error occurred during sign up";
-    redirect(`/signup?error=${encodeURIComponent(errorMessage)}`);
+  } catch (error) {
+    console.log(error);
+    redirect(`/signup`);
   }
 }
 
@@ -43,17 +43,10 @@ export async function signInAction(formData: FormData) {
 
     // If we get here, authentication succeeded but no redirect was thrown
     // This means we need to redirect manually
-  } catch (error: any) {
-    console.log("Sign in error:", error);
+  } catch (error) {
+    console.error("Sign in error:", error);
 
-    // If it's a redirect error (successful auth), let it propagate
-    if (error.digest?.startsWith("NEXT_REDIRECT")) {
-      throw error;
-    }
-
-    // For actual authentication errors, redirect back with error message
-    const errorMessage = error.message || "An error occurred during sign in";
-    redirect(`/signin?error=${encodeURIComponent(errorMessage)}`);
+    redirect(`/signin?error="${error}"`);
   }
 }
 

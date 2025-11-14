@@ -33,6 +33,7 @@ export default function CustomersPage() {
     null
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
     loadCustomers();
     loadCustomerBilling();
