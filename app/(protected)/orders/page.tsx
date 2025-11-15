@@ -9,7 +9,6 @@ export default async function Home() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  console.log(session);
   if (!session) {
     redirect("/signin");
   }
