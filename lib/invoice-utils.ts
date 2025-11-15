@@ -1,11 +1,12 @@
-import {
-  CreatorOrderGroup,
+import type {
   CreatorCustomerOrderGroup,
+  CreatorOrderGroup,
   CustomerOrderGroup,
+  OrderWithDetails,
 } from "@/lib/types";
 
 export const generateInvoiceHTML = (
-  creatorGroup: CreatorOrderGroup
+  creatorGroup: CreatorOrderGroup,
 ): string => {
   const invoiceNumber = `INV-${Date.now()}`;
   const currentDate = new Date().toLocaleDateString();
@@ -17,24 +18,34 @@ export const generateInvoiceHTML = (
   };
 
   // Group orders by customer within the creator
-  const ordersByCustomer = creatorGroup.orders.reduce((acc, order) => {
-    const customerName = order.customer?.name || "Unknown Customer";
-    const customerId = order.customer_id;
+  const ordersByCustomer = creatorGroup.orders.reduce(
+    (acc, order) => {
+      const customerName = order.customer?.name || "Unknown Customer";
+      const customerId = order.customer_id;
 
-    if (!acc[customerId]) {
-      acc[customerId] = {
-        customerName,
-        orders: [],
-        customerTotal: 0,
-      };
-    }
+      if (!acc[customerId]) {
+        acc[customerId] = {
+          customerName,
+          orders: [],
+          customerTotal: 0,
+        };
+      }
 
-    const orderTotal = parseFloat(order.service.price) * order.quantity;
-    acc[customerId].orders.push(order);
-    acc[customerId].customerTotal += orderTotal;
+      const orderTotal = parseFloat(order.service.price) * order.quantity;
+      acc[customerId].orders.push(order);
+      acc[customerId].customerTotal += orderTotal;
 
-    return acc;
-  }, {} as Record<string, { customerName: string; orders: typeof creatorGroup.orders; customerTotal: number }>);
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        customerName: string;
+        orders: typeof creatorGroup.orders;
+        customerTotal: number;
+      }
+    >,
+  );
 
   const orderRows = Object.values(ordersByCustomer)
     .map((customerGroup) => {
@@ -43,8 +54,8 @@ export const generateInvoiceHTML = (
     <tr class="customer-header">
       <td colspan="5" class="font-semibold bg-gray-50 border-t-2 border-gray-300 py-2">
         ${customerGroup.customerName} - Total: ${formatCurrency(
-        customerGroup.customerTotal
-      )}
+          customerGroup.customerTotal,
+        )}
       </td>
     </tr>
   `;
@@ -58,11 +69,11 @@ export const generateInvoiceHTML = (
       <td>${order.service?.name || "Unknown Service"}</td>
       <td>${order.quantity}</td>
       <td>${formatCurrency(
-        parseFloat(order.service.price) * order.quantity
+        parseFloat(order.service.price) * order.quantity,
       )}</td>
       <td>${new Date(order.createdAt).toLocaleDateString()}</td>
     </tr>
-  `
+  `,
         )
         .join("");
 
@@ -147,7 +158,7 @@ export const handleCreateInvoice = (creatorGroup: CreatorOrderGroup) => {
 };
 
 export const generateInvoiceHTMLForCreatorCustomer = (
-  creatorCustomerGroup: CreatorCustomerOrderGroup
+  creatorCustomerGroup: CreatorCustomerOrderGroup,
 ): string => {
   const invoiceNumber = `INV-${Date.now()}`;
   const currentDate = new Date().toLocaleDateString();
@@ -165,11 +176,11 @@ export const generateInvoiceHTMLForCreatorCustomer = (
       <td>${order.service?.name || "Unknown Service"}</td>
       <td>${order.quantity}</td>
       <td>${formatCurrency(
-        parseFloat(order.service.price) * order.quantity
+        parseFloat(order.service.price) * order.quantity,
       )}</td>
       <td>${new Date(order.createdAt).toLocaleDateString()}</td>
     </tr>
-  `
+  `,
     )
     .join("");
 
@@ -223,7 +234,7 @@ export const generateInvoiceHTMLForCreatorCustomer = (
 
         <div class="total">
           <p>Total Amount: ${formatCurrency(
-            creatorCustomerGroup.totalAmount
+            creatorCustomerGroup.totalAmount,
           )}</p>
         </div>
 
@@ -238,7 +249,7 @@ export const generateInvoiceHTMLForCreatorCustomer = (
 };
 
 export const handleCreateInvoiceForCreatorCustomer = (
-  creatorCustomerGroup: CreatorCustomerOrderGroup
+  creatorCustomerGroup: CreatorCustomerOrderGroup,
 ) => {
   // Generate invoice HTML
   const invoiceHTML =
@@ -254,7 +265,7 @@ export const handleCreateInvoiceForCreatorCustomer = (
 };
 
 export const generateInvoiceHTMLForCustomer = (
-  customerGroup: CustomerOrderGroup
+  customerGroup: CustomerOrderGroup,
 ): string => {
   const invoiceNumber = `INV-CUSTOMER-${
     customerGroup.customerId
@@ -267,14 +278,17 @@ export const generateInvoiceHTMLForCustomer = (
     }).format(amount);
   };
 
-  // Group orders by creator within the customer invoice
   const ordersByCreator = customerGroup.orders.reduce(
     (
       acc: Record<
         string,
-        { creatorName: string; orders: any[]; creatorTotal: number }
+        {
+          creatorName: string;
+          orders: OrderWithDetails[];
+          creatorTotal: number;
+        }
       >,
-      order
+      order,
     ) => {
       const creatorName = order.createdByUser?.name || "Unknown User";
       const creatorId = order.created_by;
@@ -293,14 +307,14 @@ export const generateInvoiceHTMLForCustomer = (
 
       return acc;
     },
-    {}
+    {},
   );
 
   const orderRows = Object.values(ordersByCreator)
     .map(
       (creatorGroup: {
         creatorName: string;
-        orders: any[];
+        orders: OrderWithDetails[];
         creatorTotal: number;
       }) => {
         // Creator header row
@@ -308,7 +322,7 @@ export const generateInvoiceHTMLForCustomer = (
     <tr class="creator-header">
       <td colspan="4" class="font-semibold bg-blue-50 border-t-2 border-blue-300 py-2">
         Creator: ${creatorGroup.creatorName} - Total: ${formatCurrency(
-          creatorGroup.creatorTotal
+          creatorGroup.creatorTotal,
         )}
       </td>
     </tr>
@@ -317,21 +331,21 @@ export const generateInvoiceHTMLForCustomer = (
         // Individual order rows for this creator
         const creatorOrderRows = creatorGroup.orders
           .map(
-            (order: any) => `
+            (order: OrderWithDetails) => `
     <tr>
       <td class="pl-4">${order.service?.name || "Unknown Service"}</td>
       <td>${order.quantity}</td>
       <td>${formatCurrency(
-        parseFloat(order.service.price) * order.quantity
+        parseFloat(order.service.price) * order.quantity,
       )}</td>
       <td>${new Date(order.createdAt).toLocaleDateString()}</td>
     </tr>
-  `
+  `,
           )
           .join("");
 
         return creatorHeader + creatorOrderRows;
-      }
+      },
     )
     .join("");
 
@@ -398,7 +412,7 @@ export const generateInvoiceHTMLForCustomer = (
 };
 
 export const handleCreateInvoiceForCustomer = (
-  customerGroup: CustomerOrderGroup
+  customerGroup: CustomerOrderGroup,
 ) => {
   // Generate invoice HTML
   const invoiceHTML = generateInvoiceHTMLForCustomer(customerGroup);
@@ -409,5 +423,139 @@ export const handleCreateInvoiceForCustomer = (
     invoiceWindow.document.write(invoiceHTML);
     invoiceWindow.document.close();
     invoiceWindow.print();
+  }
+};
+
+export const generateMonthlyOrdersReportHTML = (
+  customerName: string,
+  monthlyTotals: Array<{
+    monthName: string;
+    totalAmount: number;
+    orderCount: number;
+  }>,
+): string => {
+  const reportNumber = `REPORT-${Date.now()}`;
+  const currentDate = new Date().toLocaleDateString();
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+    }).format(amount);
+  };
+
+  // Calculate totals
+  const totalOrders = monthlyTotals.reduce(
+    (sum, month) => sum + month.orderCount,
+    0,
+  );
+  const totalAmount = monthlyTotals.reduce(
+    (sum, month) => sum + month.totalAmount,
+    0,
+  );
+
+  const orderRows = monthlyTotals
+    .map(
+      (month) => `
+    <tr>
+      <td>${month.monthName}</td>
+      <td class="text-center">${month.orderCount}</td>
+      <td class="text-right">${formatCurrency(month.totalAmount)}</td>
+    </tr>
+  `,
+    )
+    .join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Monthly Orders Report - ${customerName}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+          .report-details { display: flex; justify-content: space-between; margin-bottom: 30px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+          th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+          th { background-color: #f2f2f2; font-weight: bold; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .summary { background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 30px; }
+          .summary-item { display: inline-block; margin-right: 30px; }
+          .summary-label { font-weight: bold; color: #666; }
+          .summary-value { font-size: 18px; font-weight: bold; color: #333; }
+          .print-button { display: none; }
+          @media print { .no-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>MONTHLY ORDERS REPORT</h1>
+          <h2>${reportNumber}</h2>
+        </div>
+
+        <div class="report-details">
+          <div>
+            <h3>Customer: ${customerName}</h3>
+            <p>Report Period: Last 12 Months</p>
+          </div>
+          <div>
+            <p><strong>Generated Date:</strong> ${currentDate}</p>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="summary-item">
+            <div class="summary-label">Total Orders</div>
+            <div class="summary-value">${totalOrders}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Amount</div>
+            <div class="summary-value">${formatCurrency(totalAmount)}</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th class="text-center">Order Count</th>
+              <th class="text-right">Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orderRows}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 50px; text-align: center; color: #666;">
+          <p>This report shows month-on-month order totals for the selected customer.</p>
+        </div>
+
+        <button class="print-button" onclick="window.print()">Print Report</button>
+      </body>
+    </html>
+  `;
+};
+
+export const handleMonthlyOrdersReport = (
+  customerName: string,
+  monthlyTotals: Array<{
+    monthName: string;
+    totalAmount: number;
+    orderCount: number;
+  }>,
+) => {
+  // Generate report HTML
+  const reportHTML = generateMonthlyOrdersReportHTML(
+    customerName,
+    monthlyTotals,
+  );
+
+  // Open report in new window
+  const reportWindow = window.open("", "_blank", "width=800,height=600");
+  if (reportWindow) {
+    reportWindow.document.write(reportHTML);
+    reportWindow.document.close();
+    reportWindow.print();
   }
 };

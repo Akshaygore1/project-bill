@@ -26,6 +26,7 @@ import {
   type ChartDataPoint,
   type OrderWithDetails,
 } from "@/app/action/order";
+import { getBillingSummary, type BillingSummary } from "@/app/action/billing";
 import {
   ChartContainer,
   ChartTooltip,
@@ -40,7 +41,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DollarSign, ShoppingCart, Users, TrendingUp } from "lucide-react";
+import {
+  DollarSign,
+  ShoppingCart,
+  Users,
+  TrendingUp,
+  CheckCircle,
+  CreditCard,
+  AlertCircle,
+} from "lucide-react";
 
 export default function DashboardPage() {
   const isAdmin = useIsAdmin();
@@ -52,6 +61,12 @@ export default function DashboardPage() {
     totalCustomers: 0,
     averageOrderValue: 0,
   });
+  const [billingSummary, setBillingSummary] = useState<BillingSummary>({
+    totalOutstanding: 0,
+    totalPaid: 0,
+    totalBilled: 0,
+    overdueCount: 0,
+  });
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
@@ -59,15 +74,18 @@ export default function DashboardPage() {
       setLoading(true);
 
       // Fetch all dashboard data in parallel
-      const [statsData, chartDataArray, recentOrdersData] = await Promise.all([
-        getDashboardStats(),
-        getDashboardChartData(30),
-        getRecentOrders(10),
-      ]);
+      const [statsData, chartDataArray, recentOrdersData, billingData] =
+        await Promise.all([
+          getDashboardStats(),
+          getDashboardChartData(30),
+          getRecentOrders(10),
+          getBillingSummary(),
+        ]);
 
       setStats(statsData);
       setChartData(chartDataArray);
       setOrders(recentOrdersData);
+      setBillingSummary(billingData);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -187,6 +205,61 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               +7.3% from last month
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Billing Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Billed</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${billingSummary.totalBilled.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">All billing cycles</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Paid</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${billingSummary.totalPaid.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">Payments received</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${billingSummary.totalOutstanding.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">Amount pending</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Overdue Bills</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {billingSummary.overdueCount}
+            </div>
+            <p className="text-xs text-muted-foreground">Bills past due date</p>
           </CardContent>
         </Card>
       </div>

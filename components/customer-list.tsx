@@ -5,6 +5,11 @@ import type { CustomerOrderGroup } from "@/app/action/order";
 import { Edit, Eye, Trash } from "lucide-react";
 import { DataTable, type Column, type Action } from "./data-table";
 import { useMemo } from "react";
+import {
+  getBillingCycles,
+  type BillingCycleWithCustomer,
+} from "@/app/action/billing";
+import { useState, useEffect } from "react";
 
 interface CustomerListPropsExtended extends CustomerListProps {
   customerBilling: CustomerOrderGroup[];
@@ -14,6 +19,7 @@ interface CustomerWithBilling extends Customer {
   totalBill: number;
   paidBill: number;
   remainingBill: number;
+  currentMonthBill?: BillingCycleWithCustomer;
 }
 
 export function CustomerList({
@@ -22,28 +28,61 @@ export function CustomerList({
   onSelectCustomer,
   onDeleteCustomer,
 }: CustomerListPropsExtended) {
+  const [billingCycles, setBillingCycles] = useState<
+    BillingCycleWithCustomer[]
+  >([]);
+
+  useEffect(() => {
+    loadBillingCycles();
+  }, []);
+
+  async function loadBillingCycles() {
+    try {
+      const data = await getBillingCycles();
+      setBillingCycles(data);
+    } catch (error) {
+      console.error("Error loading billing cycles:", error);
+    }
+  }
+
   const billingMap = useMemo(
     () =>
       new Map(customerBilling.map((billing) => [billing.customerId, billing])),
     [customerBilling]
   );
 
+  const currentMonthBillingMap = useMemo(() => {
+    const currentMonth = new Date().getMonth() + 1;
+    const currentYear = new Date().getFullYear();
+
+    return new Map(
+      billingCycles
+        .filter(
+          (cycle) =>
+            cycle.billing_month === currentMonth &&
+            cycle.billing_year === currentYear
+        )
+        .map((cycle) => [cycle.customer_id, cycle])
+    );
+  }, [billingCycles]);
+
   const customersWithBilling: CustomerWithBilling[] = useMemo(
     () =>
       customers.map((customer) => {
-        const billing = billingMap.get(customer.id);
-        const totalBill = billing?.totalAmount || 0;
-        const paidBill = 0;
-        const remainingBill = totalBill - paidBill;
+        const currentMonthBill = currentMonthBillingMap.get(customer.id);
+        const totalBill = currentMonthBill?.total_amount || 0;
+        const paidBill = currentMonthBill?.paid_amount || 0;
+        const remainingBill = currentMonthBill?.remaining_balance || 0;
 
         return {
           ...customer,
           totalBill,
           paidBill,
           remainingBill,
+          currentMonthBill,
         };
       }),
-    [customers, billingMap]
+    [customers, currentMonthBillingMap]
   );
 
   const columns: Column<CustomerWithBilling>[] = [

@@ -9,6 +9,7 @@ import {
   File,
   BarChart3,
   User,
+  CreditCard,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -60,6 +61,12 @@ const data = {
       title: "Invoices",
       url: "/invoices",
       icon: FileText,
+      adminOnly: true,
+    },
+    {
+      title: "Billing",
+      url: "/billing",
+      icon: CreditCard,
       adminOnly: true,
     },
     {

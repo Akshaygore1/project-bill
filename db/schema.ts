@@ -132,12 +132,58 @@ export const orders = pgTable("orders", {
   customer_id: text("customer_id")
     .notNull()
     .references(() => customers.id, { onDelete: "cascade" }),
-  party_id: text("party_id")
-    .references(() => parties.id, { onDelete: "set null" }),
+  party_id: text("party_id").references(() => parties.id, {
+    onDelete: "set null",
+  }),
   service_id: text("service_id")
     .notNull()
     .references(() => services.id, { onDelete: "cascade" }),
   quantity: integer("quantity").notNull(),
+  created_by: text("created_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const billingCycles = pgTable("billing_cycles", {
+  id: text("id").primaryKey(),
+  customer_id: text("customer_id")
+    .notNull()
+    .references(() => customers.id, { onDelete: "cascade" }),
+  billing_month: integer("billing_month").notNull(), // 1-12
+  billing_year: integer("billing_year").notNull(),
+  total_amount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  previous_carryover: decimal("previous_carryover", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  paid_amount: decimal("paid_amount", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  remaining_balance: decimal("remaining_balance", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
+  is_closed: boolean("is_closed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const payments = pgTable("payments", {
+  id: text("id").primaryKey(),
+  billing_cycle_id: text("billing_cycle_id")
+    .notNull()
+    .references(() => billingCycles.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  payment_date: timestamp("payment_date").defaultNow().notNull(),
+  payment_method: text("payment_method"), // cash, bank_transfer, check, etc.
+  notes: text("notes"),
   created_by: text("created_by")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
