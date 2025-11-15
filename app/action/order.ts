@@ -3,7 +3,14 @@
 import { randomUUID } from "node:crypto";
 import { eq, sql, desc, gte } from "drizzle-orm";
 import db from "@/db";
-import { orders, customers, services, user, customerServicePrices, parties } from "@/db/schema";
+import {
+  orders,
+  customers,
+  services,
+  user,
+  customerServicePrices,
+  parties,
+} from "@/db/schema";
 
 export interface OrderItem {
   service_id: string;
@@ -146,12 +153,16 @@ export async function getGroupedOrdersByCustomer(): Promise<
       .select({
         customerId: orders.customer_id,
         customerName: customers.name,
-        totalAmount: sql<number>`SUM(${services.price} * ${orders.quantity})`,
+        totalAmount: sql<number>`SUM(COALESCE(${customerServicePrices.custom_price}, ${services.price}) * ${orders.quantity})`,
         orderCount: sql<number>`COUNT(${orders.id})`,
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .groupBy(orders.customer_id, customers.name)
       .orderBy(customers.name);
 
@@ -300,12 +311,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     // Get total revenue, orders count, and customers count in one query
     const statsResult = await db
       .select({
-        totalRevenue: sql<number>`COALESCE(SUM(${services.price} * ${orders.quantity}), 0)`,
+        totalRevenue: sql<number>`COALESCE(SUM(COALESCE(${customerServicePrices.custom_price}, ${services.price}) * ${orders.quantity}), 0)`,
         totalOrders: sql<number>`COUNT(DISTINCT ${orders.id})`,
         totalCustomers: sql<number>`COUNT(DISTINCT ${orders.customer_id})`,
       })
       .from(orders)
-      .leftJoin(services, eq(orders.service_id, services.id));
+      .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      );
 
     const totalRevenue = Number(statsResult[0]?.totalRevenue) || 0;
     const totalOrders = statsResult[0]?.totalOrders || 0;
@@ -336,11 +351,16 @@ export async function getDashboardChartData(
     const dailyData = await db
       .select({
         date: sql<string>`DATE(${orders.createdAt})`,
-        revenue: sql<number>`COALESCE(SUM(${services.price} * ${orders.quantity}), 0)`,
+        revenue: sql<number>`COALESCE(SUM(COALESCE(${customerServicePrices.custom_price}, ${services.price}) * ${orders.quantity}), 0)`,
         orders: sql<number>`COUNT(${orders.id})`,
       })
       .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .where(gte(orders.createdAt, dateThreshold))
       .groupBy(sql`DATE(${orders.createdAt})`)
       .orderBy(sql`DATE(${orders.createdAt})`);
@@ -422,7 +442,10 @@ export async function getCustomerOrders(
         },
         service: {
           name: services.name,
-          price: sql`COALESCE(${customerServicePrices.custom_price}, ${services.price})`.as('price'),
+          price:
+            sql`COALESCE(${customerServicePrices.custom_price}, ${services.price})`.as(
+              "price"
+            ),
         },
         createdByUser: {
           name: user.name,

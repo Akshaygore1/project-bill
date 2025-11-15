@@ -250,7 +250,7 @@ export function OrderForm({ customers, services, onSubmit }: OrderFormProps) {
                         setServiceSearch("");
                       }}
                     >
-                      {service.name} - ₹{service.price}
+                      {service.name}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
