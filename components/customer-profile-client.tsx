@@ -75,6 +75,12 @@ export function CustomerProfileClient({
       ),
     },
     {
+      key: "party",
+      header: "Party",
+      width: "w-[220px]",
+      render: (order) => <Badge variant="secondary">{order.party.name}</Badge>,
+    },
+    {
       key: "created_by",
       header: "Created By",
       width: "w-[150px]",

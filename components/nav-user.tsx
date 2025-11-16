@@ -20,21 +20,15 @@ import {
 import { signOutAction } from "@/app/action/auth";
 import { useSession } from "@/lib/auth-client";
 
-export function NavUser({
-  user,
-}: {
-  user?: {
-    name?: string;
-    email?: string;
-    avatar?: string;
-  };
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar();
   const { data: session } = useSession();
 
-  const displayName = user?.name ?? session?.user?.name ?? "User";
-  const displayEmail = user?.email ?? session?.user?.email ?? "";
-  const displayAvatar = user?.avatar ?? session?.user?.image ?? "";
+  console.log("data", session);
+
+  const displayName = session?.user?.name ?? "User";
+  const displayEmail = session?.user?.email ?? "";
+  const displayAvatar = session?.user?.image ?? "";
   const initials = displayName
     .split(" ")
     .filter(Boolean)

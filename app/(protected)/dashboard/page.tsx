@@ -155,7 +155,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${stats.totalRevenue.toFixed(2)}
+              ₹{stats.totalRevenue.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
@@ -200,7 +200,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${stats.averageOrderValue.toFixed(2)}
+              ₹{stats.averageOrderValue.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               +7.3% from last month
@@ -218,7 +218,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${billingSummary.totalBilled.toFixed(2)}
+              ₹{billingSummary.totalBilled.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">All billing cycles</p>
           </CardContent>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${billingSummary.totalPaid.toFixed(2)}
+              ₹{billingSummary.totalPaid.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">Payments received</p>
           </CardContent>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${billingSummary.totalOutstanding.toFixed(2)}
+              ₹{billingSummary.totalOutstanding.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">Amount pending</p>
           </CardContent>
@@ -327,6 +327,7 @@ export default function DashboardPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
+                <TableHead>Party</TableHead>
                 <TableHead>Service</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Total</TableHead>
@@ -343,12 +344,15 @@ export default function DashboardPage() {
                       {order.customer?.name || "Unknown Customer"}
                     </TableCell>
                     <TableCell>
+                      {order.party?.name || "Unknown Party"}
+                    </TableCell>
+                    <TableCell>
                       {order.service?.name || "Unknown Service"}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{order.quantity}</Badge>
                     </TableCell>
-                    <TableCell>${total.toFixed(2)}</TableCell>
+                    <TableCell>₹{total.toFixed(2)}</TableCell>
                     <TableCell>
                       {order.createdByUser?.name || "Unknown User"}
                     </TableCell>

@@ -69,6 +69,9 @@ export interface OrderWithDetails {
   customer: {
     name: string;
   };
+  party: {
+    name: string;
+  };
   service: {
     name: string;
     price: string;
@@ -124,7 +127,10 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
         },
         service: {
           name: services.name,
-          price: services.price,
+          price:
+            sql`COALESCE(${customerServicePrices.custom_price}, ${services.price})`.as(
+              "price"
+            ),
         },
         createdByUser: {
           name: user.name,
@@ -134,6 +140,10 @@ export async function getOrdersWithDetails(): Promise<OrderWithDetails[]> {
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(parties, eq(orders.party_id, parties.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .leftJoin(user, eq(orders.created_by, user.id))
       .orderBy(orders.createdAt);
 
@@ -252,6 +262,10 @@ export async function getGroupedOrdersByCreatorAndCustomer(): Promise<
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .leftJoin(user, eq(orders.created_by, user.id))
       .groupBy(orders.created_by, orders.customer_id, user.name, customers.name)
       .orderBy(user.name, customers.name);
@@ -399,7 +413,10 @@ export async function getRecentOrders(
         },
         service: {
           name: services.name,
-          price: services.price,
+          price:
+            sql`COALESCE(${customerServicePrices.custom_price}, ${services.price})`.as(
+              "price"
+            ),
         },
         createdByUser: {
           name: user.name,
@@ -409,6 +426,10 @@ export async function getRecentOrders(
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .leftJoin(parties, eq(orders.party_id, parties.id))
       .leftJoin(services, eq(orders.service_id, services.id))
+      .leftJoin(
+        customerServicePrices,
+        sql`${orders.customer_id} = ${customerServicePrices.customer_id} AND ${orders.service_id} = ${customerServicePrices.service_id}`
+      )
       .leftJoin(user, eq(orders.created_by, user.id))
       .orderBy(desc(orders.createdAt))
       .limit(limit);
@@ -462,6 +483,7 @@ export async function getCustomerOrders(
       .leftJoin(user, eq(orders.created_by, user.id))
       .where(eq(orders.customer_id, customerId))
       .orderBy(desc(orders.createdAt));
+    console.log("result", result);
     return result as OrderWithDetails[];
   } catch (error) {
     console.error("Error fetching customer orders:", error);
