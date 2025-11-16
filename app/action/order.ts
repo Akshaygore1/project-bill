@@ -256,7 +256,7 @@ export async function getGroupedOrdersByCreatorAndCustomer(): Promise<
         creatorName: user.name,
         customerId: orders.customer_id,
         customerName: customers.name,
-        totalAmount: sql<number>`SUM(${services.price} * ${orders.quantity})`,
+        totalAmount: sql<number>`SUM(COALESCE(${customerServicePrices.custom_price}, ${services.price}) * ${orders.quantity})`,
         orderCount: sql<number>`COUNT(${orders.id})`,
       })
       .from(orders)
@@ -483,7 +483,6 @@ export async function getCustomerOrders(
       .leftJoin(user, eq(orders.created_by, user.id))
       .where(eq(orders.customer_id, customerId))
       .orderBy(desc(orders.createdAt));
-    console.log("result", result);
     return result as OrderWithDetails[];
   } catch (error) {
     console.error("Error fetching customer orders:", error);
